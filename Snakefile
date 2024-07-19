@@ -52,6 +52,12 @@ rule gather_scatter:
 		elif ext == 'ind':
 			shutil.copy2(input[0], output[0])	
 
+rule sa_qc:
+	input:
+		f"{{inv}}_PCA_run/{{inv}}_mat.ind"
+	output:
+
+
 rule filt_mat:
 	input:
 		geno = f"{{inv}}_PCA_run/{{inv}}_mat.geno",
@@ -68,7 +74,7 @@ rule filt_mat:
 		cut -f 1-6 {output.tmp} > {output.snp}
 		"""
 
-rule write_smart_pca:
+rule smart_pca:
 	input:
 		geno = f"{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
 		snp  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
