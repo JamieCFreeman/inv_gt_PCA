@@ -1,5 +1,6 @@
 
 import sys
+import os
 
 # First write .par file
 # p1 = int( sys.argv[1] )
@@ -40,5 +41,5 @@ with open(par_file, 'w') as f:
 
 command = "smartpca";
 command += " -p " + par_file +  " > " + pattern_out + ".log"
-print(command)
+os.system(command)
 
