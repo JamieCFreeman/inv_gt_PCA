@@ -254,3 +254,37 @@ def apply_n_thres2(s):
 	# If only 1 state + missing, also uninformative
 	b = ( set_length_string( s.strip()) == 2 ) & ( n_count(s) > 0 )
 	return not b
+
+########################################################################
+# Functions for reading
+def read_geno(f):
+	'''
+	Read in genotype file and return as list of strings
+	'''
+	raw_in   = open(f,'r')
+	lines    = raw_in.readlines()
+	raw_in.close()
+	stripped = [ x.strip() for x in lines ]
+	return stripped
+
+def explode_gt(l):
+	'''
+	Genotype file is list of strings, 1 string of length n samples by number of sites
+	Split the string for each site into n individual strings representing the gt for
+	each sample. 
+	'''
+	e = [ [*x] for x in l ]
+	return e
+
+def read_ind(f):
+	'''
+	Individual file is just tab delimited, no header
+	'''
+	raw_in   = open(f,'r')
+	lines    = raw_in.readlines()
+	raw_in.close()
+	stripped = [ x.strip() for x in lines ]
+	out      = [ x.split('\t') for x in stripped ]
+	return out
+
+
