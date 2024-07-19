@@ -3,9 +3,11 @@
 INVERSIONS = ['2RNS', '3LP']
 
 import os
+from datetime import date
 import get_scatter_int as gs
 
 OUTDIR = os.getcwd()
+DATE  = date.today()
 
 def scatter_files(i, e):
         mat_file = i + "_mat" + e
@@ -20,8 +22,8 @@ EXT = ['geno', 'ind', 'snp']
 
 rule all:
 	input:
-		expand(f"{{inv}}_run/{{inv}}.par", inv=INVERSIONS),
-		expand(f"{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
+		expand(f"{{inv}}_PCA_run/{{inv}}_{DATE}.par", inv=INVERSIONS),
+		expand(f"{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
 #		expand(f"{OUTDIR}/{{inv}}_intervals.txt", inv=INVERSIONS)
 
 rule run_scattered_gt_mat:
@@ -38,7 +40,7 @@ rule gather_scatter:
 	input:
 		lambda wildcards: scatter_files(wildcards.inv, '.' + str(wildcards.ext))
 	output:
-		f"{{inv}}_mat.{{ext}}"
+		f"{{inv}}_PCA_run/{{inv}}_mat.{{ext}}"
 	run:
 		import scatter_gather as sg	
 		import shutil
@@ -52,12 +54,12 @@ rule gather_scatter:
 
 rule filt_mat:
 	input:
-		geno = f"{{inv}}_mat.geno",
-		snp  = f"{{inv}}_mat.snp"
+		geno = f"{{inv}}_PCA_run/{{inv}}_mat.geno",
+		snp  = f"{{inv}}_PCA_run/{{inv}}_mat.snp"
 	output:
-		tmp  = temp( f"{{inv}}_mat_filt.temp"),
-		geno = f"{{inv}}_run/{{inv}}_mat_filt.geno",
-		snp  = f"{{inv}}_run/{{inv}}_mat_filt.snp"
+		tmp  = temp( f"{{inv}}_PCA_run/{{inv}}_mat_filt.temp"),
+		geno = f"{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
+		snp  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
 	shell:
 		"""
 		paste {input.snp} {input.geno} |
@@ -68,14 +70,15 @@ rule filt_mat:
 
 rule write_smart_pca:
 	input:
-		geno = f"{{inv}}_run/{{inv}}_mat_filt.geno",
-		snp  = f"{{inv}}_run/{{inv}}_mat_filt.snp"
+		geno = f"{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
+		snp  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
 	output:
-		par = f"{{inv}}_run/{{inv}}.par"
+		par = f"{{inv}}_PCA_run/{{inv}}_{DATE}.par"
 	shell:
 		"""
-		touch {output}
+		python scripts/run_eigensoft_pca.py {workflow.basedir}/{input.geno} {workflow.basedir}/{output.par}
 		"""
+
 
 
 
