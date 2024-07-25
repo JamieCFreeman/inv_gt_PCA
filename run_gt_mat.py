@@ -5,14 +5,27 @@
 import sys
 import os
 from itertools import compress
+import importlib.util
 
 # import my modules
 sys.path.append(r'/home/jamie/FAS1K_utils')
 
 import fas1k_utils as f1k
-from inv_snp_freq import get_name
+
+###############################################################
+
+# Function to import module from abs path
+def import_mod_path(MODULE_NAME, MODULE_PATH):
+	spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
+	module = importlib.util.module_from_spec(spec)
+	sys.modules[MODULE_NAME] = module
+	spec.loader.exec_module(module)
+	return module
+
+gt_matrix = import_mod_path("gt_matrix", "/home/jamie/inv_gt_PCA/gt_mat_smartpca/gt_matrix.py")
+gs        = import_mod_path("get_scatter_int", "/home/jamie/inv_gt_PCA/gt_mat_smartpca/get_scatter_int.py")
+
 from gt_matrix import *
-import get_scatter_int as gs
 
 ###############################################################
 
@@ -38,8 +51,11 @@ all_inv = ['1A', '1Be', '2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
 ###############################################################
 
 ref = "/home/jamie/FAS1K_utils/ref_fas1k/Reference_Chr" + arm + ".fas1k"
-d = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", "/home/jamie/Nexus_diploid_fas1k", "/home/jamie/DGN_compatible/FR_N/round2/fas1k", 
-"/raid10/backups/genepool/DPGP2plus/wrap1kb/ZI_inbred_diploid", "/raid10/backups/genepool/DPGP2plus/wrap1kb/FR_diploid" ]
+d = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", "/home/jamie/DGN_compatible/ZI_N/round2/fas1k",
+"/home/jamie/DGN_compatible/FR_N/round2/fas1k",
+"/home/jamie/Nexus_diploid_fas1k", "/home/jamie/DGN_compatible/FR_N/round2/fas1k", 
+"/raid10/backups/genepool/DPGP2plus/wrap1kb/ZI_inbred_diploid", "/raid10/backups/genepool/DPGP2plus/wrap1kb/FR_diploid",
+"/home/jamie/dpgp3_sequences"]
 
 to_exclude = "SD136N"
 
@@ -51,13 +67,14 @@ for x in d:
 
 
 def get_fas1k_now(s, c):
-	b =  (c in s ) & ( s.endswith(".fas1k") ) & ( "diploid" in s) & (to_exclude not in s)
+	b =  (c in s ) & ( s.endswith(".fas1k") ) & (to_exclude not in s)
+	#b =  (c in s ) & ( s.endswith(".fas1k") ) & ( "diploid" in s) & (to_exclude not in s)
 	return b
 
 l = filt_list(all_files, get_fas1k_now, arm)
 #l = l[0:100]
 # Get line name from file path
-names = [ get_name(x) for x in l]
+names = [ f1k.get_name(x) for x in l]
 
 
 # List of all included populations

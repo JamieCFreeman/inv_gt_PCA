@@ -1,0 +1,146 @@
+---
+title: "Inversion genotyping by PCA"
+date: " r format(Sys.Date(),"%B %e, %Y") "
+output:
+  pdf_document: default
+params:
+  genotype_file:  ""
+  snp_file:  ""
+  indiv_file: ""
+  log_file:  ""
+  evec_file_ann: ""
+---
+
+# Inversion genotye checking
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+Genotypes were called from diploid unmasked .fas1k files for the 100kb regions 
+around each inversion breakpoint (so 200,000 raw sites). Sites were filtered to 
+only sites that have a variant allele, and this was used as the input to smartpca.
+
+
+## Input files for smartpca
+genotype file: `r params$genotype_file` $\\$
+snp file: `r params$snp_file` $\\$
+individual file: `r params$indiv_file` $\\$
+
+```{r load packages}
+suppressPackageStartupMessages( library(ggplot2) )
+suppressPackageStartupMessages( library(dplyr) )
+suppressPackageStartupMessages( library(knitr) )
+suppressPackageStartupMessages( library(kableExtra) )
+```
+
+```{r setup input}
+input_file   = params$evec_file_ann 
+eig = read.table(input_file, header = TRUE)
+colnames(eig)[length(colnames(eig))] <- 'INV_STATUS'
+
+eig$INV_STATUS <- factor(eig$INV_STATUS, levels = c("ST", "INV/ST", "INV", "ND"))
+levels(eig$INV_STATUS)[4] <-  '<NA>'
+#output_file = args[2]
+#
+```
+
+How many known samples are there in each group?
+```{r group counts}
+kable(eig %>% count(INV_STATUS)) %>% kableExtra::kable_styling(position = "left")
+```
+
+```{r plot PC1 PC2}
+p1 <- ggplot(data = eig, aes(x = E1, y = E2, color=INV_STATUS)) + 
+	 geom_point(size=2) + 
+	 theme_bw() +
+	 labs(x = "PC1", y = "PC2")
+p1
+```
+
+```{r plot PC2 PC3}
+p2 <- ggplot(data = eig, aes(x = E2, y = E3, color=INV_STATUS)) + 
+	 geom_point(size=2) + 
+	 theme_bw() +
+	 labs(x = "PC2", y = "PC3")
+p2
+```
+
+```{r plot PC3 PC4}
+p2 <- ggplot(data = eig, aes(x = E3, y = E4, color=INV_STATUS)) + 
+	 geom_point(size=2) + 
+	 theme_bw() +
+	 labs(x = "PC3", y = "PC4")
+p2
+```
+
+```{r plot PC1 PC2 with geog}
+p1 <- ggplot(data = eig, aes(x = E1, y = E2, color=Pop)) + 
+	 geom_point(size=2) + 
+	 theme_bw() +
+	 labs(x = "PC1", y = "PC2")
+p1
+```
+
+```{r genotyping}
+# Call based on PC1 and PC2
+d <- as.matrix(dist(eig[,2:3], diag=T, upper=T))
+
+calls <- rep(NA, nrow(eig))
+
+for (i in 1:nrow(eig)) {
+  
+	top_three <- eig[ sort( d[i,], index.return = TRUE )$ix ,] %>% 
+        	        filter(!is.na(INV_STATUS)) %>% select(INV_STATUS) %>% slice(1:3)
+	
+	# Only want to call if all three agree
+	# If all three don't agree, keep call NA
+	all_agree <- top_three %>% count(INV_STATUS) %>% filter(n==3) %>% nrow(.)
+	
+	if (all_agree == 1) {
+		top_three %>% count(INV_STATUS) %>% filter(n==3)  %>% select(INV_STATUS) %>% 
+		  unlist(., use.names=FALSE) -> calls[i]
+	}
+}
+
+# need to set as factor
+top_three %>% count(INV_STATUS) %>% filter(n==3)  %>% select(INV_STATUS) %>% 
+  unlist(., use.names=FALSE) %>% levels(.) -> call_levels
+levels(calls) <- call_levels
+class(calls) <- "factor"
+
+eig <- cbind(eig, "INV_CALLS"=calls)
+
+kable(eig %>% filter(is.na(INV_STATUS)) %>% select(Library_ID, Pop, INV_CALLS))
+```
+
+This plot shows our inversion calls. \
+```{r plot calls}
+ggplot(data = eig, aes(x = E1, y = E2, color=INV_CALLS)) + 
+  geom_point(size=2) + 
+  theme_bw() +
+  labs(x = "PC1", y = "PC2")
+```
+
+Now are there any known samples where this would have failed to call?
+```{r check, echo = TRUE}
+eig %>% filter(!is.na(INV_STATUS)) %>% filter(INV_STATUS!=INV_CALLS)
+
+```
+
+```{r print indiv, echo = TRUE}
+sample_qc_file = paste(strsplit(input_file, '_')[[1]][1], '_mat_sample_qc.tsv', sep='')
+print(sample_qc_file)
+qc = read.table(sample_qc_file, header = TRUE)
+colnames(qc)[1] <- "Library_ID"
+```
+
+```{r}
+hist(qc$proportion_n)
+hist(qc$proportion_het)
+```
+
+```{r }
+kable(qc)
+
+
+```
+

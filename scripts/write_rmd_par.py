@@ -5,15 +5,15 @@ import sys
 # p1 = int( sys.argv[1] )
 pattern_in  = sys.argv[1]
 pattern_out = sys.argv[2]
+out_file    = sys.argv[3]
 #pattern_in = '2Lt_mat_filt'
 #pattern_out = '2Lt_test_03'
-par_file    = pattern_out + '_par.txt'
 #par_file    = pattern_out + '/' + pattern_out + '_par.txt'
 
 
 
 # YAML doesn't accept \t characters!
-with open('rmd.temp', 'w') as f:
+with open(out_file, 'w') as f:
     f.write('---' + '\n')
     f.write(f"{'title:' :<25}" + '"' + pattern_out + "inversion genotyping by PCA" + '"' + '\n')
     f.write('date: ' + '"`r format(Sys.Date(),\'%B %e, %Y\')`"' + '\n')

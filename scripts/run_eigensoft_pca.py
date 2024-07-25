@@ -41,5 +41,5 @@ with open(par_file, 'w') as f:
 
 command = "smartpca";
 command += " -p " + par_file +  " > " + pattern_out + ".log"
-os.system(command)
+#os.system(command)
 
