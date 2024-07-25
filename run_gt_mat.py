@@ -55,9 +55,9 @@ d = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", "/home/jamie/DG
 "/home/jamie/DGN_compatible/FR_N/round2/fas1k",
 "/home/jamie/Nexus_diploid_fas1k", "/home/jamie/DGN_compatible/FR_N/round2/fas1k", 
 "/raid10/backups/genepool/DPGP2plus/wrap1kb/ZI_inbred_diploid", "/raid10/backups/genepool/DPGP2plus/wrap1kb/FR_diploid",
-"/home/jamie/dpgp3_sequences"]
+"/home/jamie/dpgp3_sequences", "/home/jamie/dpgp2_sequences"]
 
-to_exclude = "SD136N"
+to_exclude = ["SD136N", "FR11N"]
 
 # For a list of directories get list of files
 all_files = []
@@ -67,7 +67,7 @@ for x in d:
 
 
 def get_fas1k_now(s, c):
-	b =  (c in s ) & ( s.endswith(".fas1k") ) & (to_exclude not in s)
+	b =  (c in s ) & ( s.endswith(".fas1k") ) & all([ x not in s for x in to_exclude ])
 	#b =  (c in s ) & ( s.endswith(".fas1k") ) & ( "diploid" in s) & (to_exclude not in s)
 	return b
 
@@ -78,7 +78,9 @@ names = [ f1k.get_name(x) for x in l]
 
 
 # List of all included populations
-pop_list = ['FR', 'ZI', 'EG', 'SD', 'SP', 'EA', 'EF', 'KM', 'CO', 'UG']
+pop_list = ['FR', 'ZI', 'EG', 'SD', 'SP', 'EA', 'EF', 'KM', 'NG', 'RG', 
+        'CK', 'CO', 'ED', 'EZ', 'GA', 'GU', 'KN', 'KO', 'KR', 'KT', 'MW', 'RC', 'TZ', 
+        'UG', 'UM', 'ZK', 'ZL', 'ZO', 'ZS' ]
 
 # New libraries have different naming patterns, provide list of pop codes 
 #   and check library names against known codes- stop execution and return error
