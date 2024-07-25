@@ -10,6 +10,6 @@ For the ploteig function, I had to edit the perl shebang line from #!/usr/local/
 and comment out line 145 which calls a function on the developer's file system (which otherwise resulted in error
 'Can't exec "/home/np29/bin/fixgreen": No such file or directory at ../bin/ploteig line 145, <FF> line 6.'
 
-
+Make sure smartpca is in your path (export PATH="/home/jamie/EIG/bin:$PATH").
 
 Generate 
