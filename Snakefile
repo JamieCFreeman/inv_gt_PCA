@@ -1,10 +1,10 @@
 
 #INVERSIONS = ['1A', '1Be', '2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
-INVERSIONS = ['2RNS', '3LP']
+INVERSIONS = ['2LT', '2RNS', '3LP', '3RK', ]
 
 import os
 from datetime import date
-import get_scatter_int as gs
+import gt_mat_smartpca.get_scatter_int as gs
 
 OUTDIR = os.getcwd()
 DATE  = date.today()
@@ -22,7 +22,7 @@ EXT = ['geno', 'ind', 'snp']
 
 rule all:
 	input:
-		expand(f"{{inv}}_PCA_run/{{inv}}_{DATE}.par", inv=INVERSIONS),
+		expand(f"{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
 		expand(f"{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
 #		expand(f"{OUTDIR}/{{inv}}_intervals.txt", inv=INVERSIONS)
 
@@ -42,7 +42,7 @@ rule gather_scatter:
 	output:
 		f"{{inv}}_PCA_run/{{inv}}_mat.{{ext}}"
 	run:
-		import scatter_gather as sg	
+		import gt_mat_smartpca.scatter_gather as sg	
 		import shutil
 		# 
 		# For .geno & .snp files, need to merge, but .ind are all the same
@@ -54,14 +54,21 @@ rule gather_scatter:
 
 rule sa_qc:
 	input:
-		f"{{inv}}_PCA_run/{{inv}}_mat.ind"
+		ind   = f"{{inv}}_PCA_run/{{inv}}_mat.ind",
+		geno  = f"{{inv}}_PCA_run/{{inv}}_mat.geno"
 	output:
-
+		sa_qc    = f"{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv",
+		filt_ind = f"{{inv}}_PCA_run/{{inv}}_mat_filt.ind"
+	shell:
+		"""
+		python run_sa_qc.py {input.geno} {input.ind}
+		"""
 
 rule filt_mat:
 	input:
 		geno = f"{{inv}}_PCA_run/{{inv}}_mat.geno",
-		snp  = f"{{inv}}_PCA_run/{{inv}}_mat.snp"
+		snp  = f"{{inv}}_PCA_run/{{inv}}_mat.snp",
+		sa_qc = f"{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv"
 	output:
 		tmp  = temp( f"{{inv}}_PCA_run/{{inv}}_mat_filt.temp"),
 		geno = f"{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
@@ -74,10 +81,11 @@ rule filt_mat:
 		cut -f 1-6 {output.tmp} > {output.snp}
 		"""
 
-rule smart_pca:
+rule write_PCA_par:
 	input:
 		geno = f"{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
-		snp  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
+		snp  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.snp",
+		ind  = f"{{inv}}_PCA_run/{{inv}}_mat_filt.ind"
 	output:
 		par = f"{{inv}}_PCA_run/{{inv}}_{DATE}.par"
 	shell:
@@ -85,6 +93,70 @@ rule smart_pca:
 		python scripts/run_eigensoft_pca.py {workflow.basedir}/{input.geno} {workflow.basedir}/{output.par}
 		"""
 
+rule smartpca:
+	input:
+		par = f"{{inv}}_PCA_run/{{inv}}_{DATE}.par"
+	output:
+		log  = f"{{inv}}_PCA_run/{{inv}}_{DATE}.log",
+		evec = f"{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
+	shell:
+		"""
+		smartpca -p {input.par} > {output.log}
+		"""
 
+rule annot_evec:
+	input:
+		evec = f"{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
+	output:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
+	shell:
+		"""
+		python annot_evec.py {input}
+		"""
 
+rule rmd_par:
+	input:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
+	output:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
+	params:
+		date = DATE
+	shell:
+		"""
+		python scripts/write_rmd_par.py {wildcards.inv}_mat_filt \
+			{wildcards.inv}_{params.date} {output}
+		"""
 
+rule write_rmd:
+	input:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
+	output:
+		rmd = f"{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+	params:
+		rmd = "scripts/plot_PCA.Rmd"
+	conda: "envs/rmd.yaml"
+	shell:
+		"""
+		cat {input} <( tail -n +12 {params.rmd}) > {output.rmd}
+#		sed -i 's/In.2L.t/{wildcards.inv}/' {output.rmd}
+#		Rscript -e "rmarkdown::render(\"{output.rmd}\")"
+		"""
+
+rule rmd_report:
+	input:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+	output:
+		f"{{inv}}_PCA_run/{{inv}}_{DATE}.pdf"
+	conda: "envs/rmd.yaml"
+#	script:
+#		f"{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+	shell:
+		r"""
+cat <<'EOF' > {rule}.$$.tmp.R
+
+rmarkdown::render("{input}")
+
+EOF
+Rscript {rule}.$$.tmp.R
+rm {rule}.$$.tmp.R
+        """
