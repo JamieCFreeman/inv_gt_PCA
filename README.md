@@ -12,4 +12,14 @@ and comment out line 145 which calls a function on the developer's file system (
 
 Make sure smartpca is in your path (export PATH="/home/jamie/EIG/bin:$PATH").
 
-Generate 
+Generates genotype matrix for inversion breakpoint regions, performs PCA, and plots some output/diagnostics.
+
+Changes to do:
+Currently the samples are specified in the script run_gt_mat.py, but should move this out (to config file maybe?).
+Summary table for all inv
+Fix 1Be- cluster on non-African only, then project other populations? or gt just non-Africa
+Pop globbing (Aug samples coming up as UG)
+
+
+Command for 
+scp jamie@marula.genetics.wisc.edu:/home/jamie/inv_gt_PCA/res_out.tar .
