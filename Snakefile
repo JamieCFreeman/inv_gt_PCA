@@ -1,6 +1,12 @@
 
-INVERSIONS = ['1A', '1Be', '2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
+INVERSIONS = ['3LOK']
+
+INVERSIONS = ['1A', '1Be', '2LT', '2RNS', '3LP', '3LOK', '3RK', '3RMO', '3RP']
 #INVERSIONS = ['2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP' ]
+
+# Some inversions cosmopolitan, some endemic
+COSMOP  = ['2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
+ENDEMIC = ['1A', '1Be', '3LOk']
 
 import os
 from datetime import date
@@ -8,6 +14,7 @@ import gt_mat_smartpca.get_scatter_int as gs
 
 OUTDIR = os.getcwd()
 DATE  = date.today()
+#DATE = '2024-08-28'
 
 def scatter_files(i, e):
         mat_file = i + "_mat" + e
@@ -22,6 +29,7 @@ EXT = ['geno', 'ind', 'snp']
 
 rule all:
 	input:
+		"res_out.tar",
 		expand(f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
 		expand(f"{DATE}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
 #		expand(f"{OUTDIR}/{{inv}}_intervals.txt", inv=INVERSIONS)
@@ -146,7 +154,8 @@ rule rmd_report:
 	input:
 		f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
 	output:
-		f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf"
+		f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf",
+		f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}_CALLs.tsv"
 	conda: "envs/rmd.yaml"
 #	script:
 #		f"{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
@@ -160,3 +169,19 @@ EOF
 Rscript {rule}.$$.tmp.R
 rm {rule}.$$.tmp.R
         """
+
+rule tar_res:
+	input:
+		rmd = expand(f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS)
+		tsv = expand(f"{DATE}/{{inv}}_PCA_run/{{inv}}_{DATE}_CALLS.tsv", inv=INVERSIONS)
+	output:
+		"res_out.tar"
+	shell:
+		"""
+		mkdir -p res_out_tmp
+		cp {input} ./res_out_tmp
+		tar -cvf res_out.tar res_out_tmp
+		rm -r res_out_tmp
+		"""
+
+
