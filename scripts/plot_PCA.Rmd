@@ -34,9 +34,12 @@ suppressPackageStartupMessages( library(kableExtra) )
 
 ```{r setup input}
 input_file   = params$evec_file_ann 
+output_file  = paste(strsplit(params$evec_file_ann, '.tsv')[[1]][1], '_CALLS', '.tsv', sep='')
 eig = read.table(input_file, header = TRUE)
 colnames(eig)[length(colnames(eig))] <- 'INV_STATUS'
 
+# Remove ND (no calls from Nexus)
+eig %>% filter( is.na(INV_STATUS) | INV_STATUS != "ND") -> eig
 eig$INV_STATUS <- factor(eig$INV_STATUS, levels = c("ST", "INV/ST", "INV", "ND"))
 levels(eig$INV_STATUS)[4] <-  '<NA>'
 #output_file = args[2]
@@ -81,19 +84,25 @@ p1
 ```
 
 ```{r genotyping}
-# Call based on PC1 and PC2
-d <- as.matrix(dist(eig[,2:3], diag=T, upper=T))
+# Call based on first 4 PCs
+distance_dim <- 4 # number of dimensions to calculate distance
+d <- as.matrix(dist(eig[,2:(2+distance_dim-1)], diag=T, upper=T))
 
 calls <- rep(NA, nrow(eig))
+# To call, find n nearest points with known inv status, and call status if all
+#   agree. If the n nearest points have differing inv status, call NA for manual
+#   inspection later.
+n_neighbors <- 3 #how many of the closest points will we use to call?
+
 
 for (i in 1:nrow(eig)) {
   
 	top_three <- eig[ sort( d[i,], index.return = TRUE )$ix ,] %>% 
-        	        filter(!is.na(INV_STATUS)) %>% select(INV_STATUS) %>% slice(1:3)
+        	        filter(!is.na(INV_STATUS)) %>% select(INV_STATUS) %>% slice(2:(n_neighbors + 1))
 	
-	# Only want to call if all three agree
-	# If all three don't agree, keep call NA
-	all_agree <- top_three %>% count(INV_STATUS) %>% filter(n==3) %>% nrow(.)
+	# Only want to call if all top matches agree
+	# If all don't agree, keep call NA
+	all_agree <- top_three %>% count(INV_STATUS) %>% filter(n==n_neighbors) %>% nrow(.)
 	
 	if (all_agree == 1) {
 		top_three %>% count(INV_STATUS) %>% filter(n==3)  %>% select(INV_STATUS) %>% 
@@ -112,17 +121,55 @@ eig <- cbind(eig, "INV_CALLS"=calls)
 kable(eig %>% filter(is.na(INV_STATUS)) %>% select(Library_ID, Pop, INV_CALLS))
 ```
 
+```{r write table}
+write.table(eig, output_file, row.names = FALSE, quote = FALSE)
+```
+
+
 This plot shows our inversion calls. \
 ```{r plot calls}
 ggplot(data = eig, aes(x = E1, y = E2, color=INV_CALLS)) + 
   geom_point(size=2) + 
+  geom_point(data=eig[is.na(eig$INV_CALLS),], size = 2) +
   theme_bw() +
   labs(x = "PC1", y = "PC2")
 ```
 
+Which samples did we fail to call with our distance-based approach?
+```{r print NAs}
+kable( eig %>% filter(is.na(INV_CALLS)))
+```
+
+
 Now are there any known samples where this would have failed to call?
 ```{r check, echo = TRUE}
 eig %>% filter(!is.na(INV_STATUS)) %>% filter(INV_STATUS!=INV_CALLS)
+
+```
+
+Which PCs are separating inversion status?
+```{r PC by inv_staus boxplot}
+
+library(cowplot)
+
+b1 <- eig %>% filter(INV_STATUS %in% c("ST", "INV/ST","INV")) %>%
+      ggplot(., aes(x = INV_STATUS, y = E1, color = INV_STATUS)) + 
+        geom_boxplot() + theme_bw() +
+        theme(legend.position="none")
+b2 <- eig %>% filter(INV_STATUS %in% c("ST", "INV/ST","INV")) %>%
+      ggplot(., aes(x = INV_STATUS, y = E2, color = INV_STATUS)) + 
+        geom_boxplot() + theme_bw() + theme(legend.position="none")
+b3 <- eig %>% filter(INV_STATUS %in% c("ST", "INV/ST","INV")) %>%
+      ggplot(., aes(x = INV_STATUS, y = E3, color = INV_STATUS)) + 
+        geom_boxplot() + theme_bw() + theme(legend.position="none")
+b4 <- eig %>% filter(INV_STATUS %in% c("ST", "INV/ST","INV")) %>%
+      ggplot(., aes(x = INV_STATUS, y = E4, color = INV_STATUS)) + 
+        geom_boxplot() + theme_bw()
+
+shared_leg <- get_legend(b4)
+b4 <- b4 + theme(legend.position="none")
+
+plot_grid(b1, b2, b3, b4, shared_leg, rel_widths = c(3,3,3,3, 1), nrow = 1)
 
 ```
 
