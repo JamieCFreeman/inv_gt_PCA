@@ -171,7 +171,10 @@ def get_pop_code(s, k):
 	'''
 	For a string s, change case to upper, then check against a list 
 	of possible known population codes k. 
-	'''
+	If 1 match, returns match. If no match, returns 'missing'.
+    If > 1 match, returns match that occurs latest in the string- b/c
+    my library naming convention is Date-line_name. 
+    '''
 	# re.search for each pop code in the provided string, output -> bool, 
 	#	then compress list to matches 
 	o = list( compress(k, [ bool( re.search(x, s.upper() ) ) for x in k ]) )
@@ -181,6 +184,11 @@ def get_pop_code(s, k):
 		return o[0]
 	if len(o) == 0:
 		return 'missing'
+	if len(o) > 1:
+		# If > 1 match, save coord of match in string & return match closest to end of s
+		d = {x: s.upper().find(x) for x in o }
+		return max(d, key=d.get)
+
 
 ###############################################################
 

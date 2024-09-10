@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	# Depending on number of files, can alter chunk size so not hogging memory 
 	chunk_size = 10000
 	
-	inv_dict = get_inv_bk('2RNS')
+	inv_dict = get_inv_bk(inv)
 	ref       = match_arm_ref(inv_dict['arm'], 'ref_fas1k')
 	
 	intervals = get_scatter_int(inv)
