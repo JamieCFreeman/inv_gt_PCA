@@ -20,6 +20,9 @@ Summary table for all inv
 Fix 1Be- cluster on non-African only, then project other populations? or gt just non-Africa
 Pop globbing (Aug samples coming up as UG)
 
+Run with conda:
+snakemake --use-conda --conda-frontend conda 
+
 
 Command for 
 scp jamie@marula.genetics.wisc.edu:/home/jamie/inv_gt_PCA/res_out.tar .
