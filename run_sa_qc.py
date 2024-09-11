@@ -10,7 +10,8 @@ from gt_mat_smartpca.gt_matrix import *
 raw_geno    = sys.argv[1]
 raw_ind     = sys.argv[2] 
 filt_log    = raw_geno.split('.geno')[0] + 'filt.log'
-
+filt_ind    = raw_ind.split('.ind')[0] + '_filt' + '.ind'
+filt_geno   = raw_geno.split('.geno')[0] + '_filt.tmp'
 
 ########################################################################
 
@@ -22,6 +23,7 @@ n_thres = 0.5
 # Read in names from .ind file
 indiv    = read_ind(raw_ind)
 df_indiv = pd.DataFrame(indiv)
+df_indiv = df_indiv.set_index(0, drop=False)
 
 # Read in gts
 strip_gt = read_geno(raw_geno)
@@ -44,13 +46,23 @@ bad = prop_n.loc[prop_n > n_thres].index.tolist()
 
 if len(bad) > 0:
 # Rejoin strings by position to get back to .geno file type
-    filt = df.drop(df.columns[bad], axis=1)
+# Write tmp .geno file filtered for individual
+    filt = df.drop(labels=bad, axis=1)
     filt_join = filt.apply(lambda x: ''.join(x), axis=1)
     l0 = filt_join.tolist()
+    with open(filt_geno, 'w') as f:
+         f.write('\n'.join(l0) + '\n')
+    # write filtered ind file
+    df_indiv  = df_indiv.drop(labels=bad, axis=0)
+    filt_join = df_indiv.apply(lambda x: '\t'.join(x), axis=1)
+    l0 = filt_join.tolist()
+    with open(filt_ind, 'w') as f:
+        f.write('\n'.join(l0) + '\n')
 
+# If no samples filtered, just copy original files over
 if len(bad) == 0:
-    filt_ind = raw_ind.split('.ind')[0] + '_filt' + '.ind'
     shutil.copyfile(raw_ind, filt_ind)
+    shutil.copyfile(raw_geno, filt_geno)
 
 # Write filtering log
 with open(filt_log, 'w') as f:
