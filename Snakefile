@@ -37,6 +37,7 @@ def scatter_files(i, e):
         return scatter_output
 
 
+
 EXT = ['geno', 'ind', 'snp']
 
 #######################################################################################
@@ -53,9 +54,11 @@ rule run_scattered_gt_mat:
 		geno = temp( f"{{inv}}_mat_{{start}}_{{end}}.geno"),
 		snp  = temp( f"{{inv}}_mat_{{start}}_{{end}}.snp"),
 		ind  = temp( f"{{inv}}_mat_{{start}}_{{end}}.ind")
+	params: 
+		arm =  lambda wildcards: gs.get_inv_bk(wildcards.inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm']
 	shell:
 		"""	
-		python run_gt_mat.py {wildcards.start} {wildcards.end} {output.geno}
+		python run_gt_mat.py {params.arm} {wildcards.start} {wildcards.end} {output.geno}
 		"""
 
 rule gather_scatter:
@@ -79,8 +82,9 @@ rule sa_qc:
 		ind   = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.ind",
 		geno  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.geno"
 	output:
-		sa_qc    = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv",
-		filt_ind = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind"
+		sa_qc     = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv",
+		filt_ind  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind",
+		filt_geno = temp(f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp")
 	shell:
 		"""
 		python run_sa_qc.py {input.geno} {input.ind}
@@ -88,7 +92,7 @@ rule sa_qc:
 
 rule filt_mat:
 	input:
-		geno = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.geno",
+		geno = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp",
 		snp  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.snp",
 		sa_qc = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv"
 	output:

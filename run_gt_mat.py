@@ -29,15 +29,16 @@ from gt_matrix import *
 
 ###############################################################
 
-p1       = int( sys.argv[1] )
-p2       = int( sys.argv[2] )
-out_now  = sys.argv[3]
+arm      = sys.argv[1]
+p1       = int( sys.argv[2] )
+p2       = int( sys.argv[3] )
+out_now  = sys.argv[4]
 
 #out_file = "1A_mat.txt"
 #out_now = out_file.split('.txt')[0] + '_' + str(p1) + '_' + str(p2) + '.geno'
 
-inv = out_now.split('_')[0]
-arm = gs.get_inv_bk(inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm']
+#inv = out_now.split('_')[0]
+#arm = gs.get_inv_bk(inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm']
 
 # Writing file with append, so want to make sure it doesn't exist when we start
 if ( os.path.isfile( out_now ) ):
