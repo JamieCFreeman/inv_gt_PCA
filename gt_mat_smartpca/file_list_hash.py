@@ -18,7 +18,8 @@ k = [ "/home/jamie/Nexus_diploid_fas1k",
         "/raid10/backups/genepool/DPGP2plus/wrap1kb/ZI_inbred_diploid",
         "/raid10/backups/genepool/DPGP2plus/wrap1kb/FR_diploid",
         "/home/jamie/dpgp3_sequences", "/home/jamie/dpgp2_sequences",
-        "/raid10/jamie/diploid_fas1k_nomask/CLARK"]
+        "/raid10/jamie/diploid_fas1k_nomask/CLARK",
+        "/home/jamie/dpgp3_sequences/synth_het"]
 
 # For a list of directories get list of files
 def listfullpath(d):
