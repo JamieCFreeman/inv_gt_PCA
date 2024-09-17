@@ -134,7 +134,9 @@ def expand_set_het(s):
 	'''
 	het_sites = set(het_dict.keys()).intersection(s)
 	if len(het_sites) > 0:
-		return s.union(het_dict[ list(het_sites)[0] ]) - het_sites
+		for x in list(het_sites):
+			s = s.union(het_dict[x])
+		return s - het_sites
 	elif len(het_sites) == 0:
 		return s
 
