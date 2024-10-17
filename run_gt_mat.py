@@ -128,7 +128,7 @@ sa_codes = uk_sa_codes + k_sa_codes
 ###############################################################
 
 nt_list = f1k_zip(l, ref, p1, p2)
-snp_out = gen_snp_file(nt_list, "2L", p1)
+snp_out = gen_snp_file(nt_list, arm, p1)
 out     = gen_gt_mat(nt_list)
 
 #out = gen_gt_mat(l, ref, p1, p2)
