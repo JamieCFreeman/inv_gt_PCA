@@ -75,7 +75,13 @@ eigin.close()
 sep = [ x.split() for x in lines ]
 sep.pop(0)
 
-eig = pd.DataFrame(sep,columns=["Library_ID", "E1", "E2", "E3", "E4", "Pop"])
+# How many eigenvalues are in the file? (User-supplied var to eigenstrat)
+n_eig      = len( sep[0] ) - 2
+eig_header = ['E' + str(x) for x in range(1,n_eig+1) ]
+eig_header.insert(0, "Library_ID")
+eig_header.append('Pop')
+
+eig = pd.DataFrame(sep,columns=eig_header)
 eig = eig.set_index("Library_ID")
 
 # To get join keeping all rows from left
