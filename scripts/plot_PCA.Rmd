@@ -135,6 +135,22 @@ ggplot(data = eig, aes(x = E1, y = E2, color=INV_CALLS)) +
   labs(x = "PC1", y = "PC2")
 ```
 
+```{r plot calls 2}
+ggplot(data = eig, aes(x = E2, y = E3, color=INV_CALLS)) +
+  geom_point(size=2) +
+  geom_point(data=eig[is.na(eig$INV_CALLS),], size = 2) +
+  theme_bw() +
+  labs(x = "PC2", y = "PC3")
+```
+
+```{r plot calls 3}
+ggplot(data = eig, aes(x = E3, y = E4, color=INV_CALLS)) +
+  geom_point(size=2) +
+  geom_point(data=eig[is.na(eig$INV_CALLS),], size = 2) +
+  theme_bw() +
+  labs(x = "PC3", y = "PC4")
+```
+
 Which samples did we fail to call with our distance-based approach?
 ```{r print NAs}
 kable( eig %>% filter(is.na(INV_CALLS)))
