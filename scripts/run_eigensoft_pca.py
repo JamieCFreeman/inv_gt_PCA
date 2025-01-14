@@ -19,7 +19,7 @@ pattern_out  = par_file.split('.')[0]
 alt_norm = 'NO'
 
 # Number eigenvectors out (default 2)
-eig_out = 4
+eig_out = 10
 
 # Number outlier iterations (0 turns off outlier removal)
 outlier_it = 0
