@@ -9,9 +9,11 @@ from gt_mat_smartpca.gt_matrix import *
 # usage run_sa_qc.py  
 raw_geno    = sys.argv[1]
 raw_ind     = sys.argv[2] 
-filt_log    = raw_geno.split('.geno')[0] + 'filt.log'
+filt_log    = raw_ind.split('.ind')[0] + 'filt.log'
 filt_ind    = raw_ind.split('.ind')[0] + '_filt' + '.ind'
-filt_geno   = raw_geno.split('.geno')[0] + '_filt.tmp'
+# fix later- first pattern for inv, 2nd for whole arm comp
+filt_geno   = raw_ind.split('.ind')[0] + '_filt.tmp'
+#filt_geno   = raw_ind.split('.ind')[0] + '_filt.geno'
 
 ########################################################################
 
@@ -29,8 +31,13 @@ df_indiv = df_indiv.set_index(0, drop=False)
 strip_gt = read_geno(raw_geno)
 exploded = explode_gt(strip_gt)
 
+#now = [ x[1] for x in strip_gt ]
+#from collections import Counter
+#Counter(now)
+
 # Set gt to df and get n proportions, het proportions
-df = pd.DataFrame(exploded, columns = df_indiv[df_indiv.columns[0]])
+#df = pd.DataFrame(exploded, columns = df_indiv[df_indiv.columns[0]])
+df = pd.DataFrame(exploded, columns = df_indiv[df_indiv.columns[0]], dtype='category')
 n = (df == '9').sum()
 prop_n = n / df.shape[0]
 
