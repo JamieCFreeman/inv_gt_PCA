@@ -46,7 +46,7 @@ def reformat_inv(x):
 
 inv = inv.rename(reformat_inv, axis=1)
 
-now = get_name(eig_file).upper()
+now = get_name(eig_file, '_').upper()
 
 ########################################################################
 # Add synthethic 3LOk het sequences into known
