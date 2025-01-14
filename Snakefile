@@ -1,5 +1,6 @@
 
 
+#INVERSIONS = ['1A', '2LT']
 INVERSIONS = ['1A', '1Be', '2LT', '2RNS', '3LP', '3LOK', '3RK', '3RMO', '3RP']
 #INVERSIONS = ['2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP' ]
 
@@ -13,6 +14,10 @@ import gt_mat_smartpca.get_scatter_int as gs
 
 
 #######################################################################################
+# Pass through variables from config file
+configfile: "config.yaml"
+
+#######################################################################################
 # Want snakemake to trigger rerun when input files used for PCA change (eg add new known
 # to improve calling or run new unknown data)
 # file_list_hash writes list of files to 'file_list.txt'- hash is on the file list, not
@@ -21,13 +26,13 @@ import gt_mat_smartpca.file_list_hash as fh
 
 HASH = fh.sha_return('file_list.txt')[0:7]
 
+OUTDIR = config["prefix"] + '_' + HASH
 
 #######################################################################################
 
 
-OUTDIR = os.getcwd()
+#OUTDIR = os.getcwd()
 DATE   = date.today()
-#DATE = '2024-08-28'
 
 def scatter_files(i, e):
         mat_file = i + "_mat" + e
@@ -36,8 +41,10 @@ def scatter_files(i, e):
         scatter_output = [ pat + '_' + str(x[0]) + '_' + str(x[1]) + e for x in intervals ]
         return scatter_output
 
+def append_str_to_list(s, l):
+        return [ s + x for x in l ]
 
-
+# File extensions for each scattered interval
 EXT = ['geno', 'ind', 'snp']
 
 #######################################################################################
@@ -45,15 +52,15 @@ EXT = ['geno', 'ind', 'snp']
 rule all:
 	input:
 		"res_out.tar",
-		expand(f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
-		expand(f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
+		expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
+		expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
 #		expand(f"{OUTDIR}/{{inv}}_intervals.txt", inv=INVERSIONS)
 
 rule run_scattered_gt_mat:
 	output:
-		geno = temp( f"{{inv}}_mat_{{start}}_{{end}}.geno"),
-		snp  = temp( f"{{inv}}_mat_{{start}}_{{end}}.snp"),
-		ind  = temp( f"{{inv}}_mat_{{start}}_{{end}}.ind")
+		geno = temp( f"{OUTDIR}/{{inv}}_mat_{{start}}_{{end}}.geno"),
+		snp  = temp( f"{OUTDIR}/{{inv}}_mat_{{start}}_{{end}}.snp"),
+		ind  = temp( f"{OUTDIR}/{{inv}}_mat_{{start}}_{{end}}.ind")
 	params: 
 		arm =  lambda wildcards: gs.get_inv_bk(wildcards.inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm']
 	shell:
@@ -63,9 +70,9 @@ rule run_scattered_gt_mat:
 
 rule gather_scatter:
 	input:
-		lambda wildcards: scatter_files(wildcards.inv, '.' + str(wildcards.ext))
+		lambda wildcards: append_str_to_list(OUTDIR +'/', scatter_files(wildcards.inv, '.' + str(wildcards.ext)) )
 	output:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}"
 	run:
 		import gt_mat_smartpca.scatter_gather as sg	
 		import shutil
@@ -79,12 +86,12 @@ rule gather_scatter:
 
 rule sa_qc:
 	input:
-		ind   = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.ind",
-		geno  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.geno"
+		ind   = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.ind",
+		geno  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.geno"
 	output:
-		sa_qc     = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv",
-		filt_ind  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind",
-		filt_geno = temp(f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp")
+		sa_qc     = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv",
+		filt_ind  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind",
+		filt_geno = temp(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp")
 	shell:
 		"""
 		python run_sa_qc.py {input.geno} {input.ind}
@@ -92,13 +99,13 @@ rule sa_qc:
 
 rule filt_mat:
 	input:
-		geno = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp",
-		snp  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat.snp",
-		sa_qc = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv"
+		geno = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.tmp",
+		snp  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.snp",
+		sa_qc = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_sample_qc.tsv"
 	output:
-		tmp  = temp( f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.temp"),
-		geno = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
-		snp  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
+		tmp  = temp( f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.temp"),
+		geno = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
+		snp  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.snp"
 	shell:
 		"""
 		paste {input.snp} {input.geno} |
@@ -109,22 +116,22 @@ rule filt_mat:
 
 rule write_PCA_par:
 	input:
-		geno = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
-		snp  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.snp",
-		ind  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind"
+		geno = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.geno",
+		snp  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.snp",
+		ind  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat_filt.ind"
 	output:
-		par = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.par"
+		par = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.par"
 	shell:
 		"""
-		python scripts/run_eigensoft_pca.py {workflow.basedir}/{input.geno} {workflow.basedir}/{output.par}
+		python scripts/run_eigensoft_pca.py {input.geno} {output.par}
 		"""
 
 rule smartpca:
 	input:
-		par = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.par"
+		par = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.par"
 	output:
-		log  = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.log",
-		evec = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
+		log  = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.log",
+		evec = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
 	shell:
 		"""
 		smartpca -p {input.par} > {output.log}
@@ -132,9 +139,9 @@ rule smartpca:
 
 rule annot_evec:
 	input:
-		evec = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
+		evec = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.evec"
 	output:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
 	shell:
 		"""
 		python annot_evec.py {input}
@@ -142,9 +149,9 @@ rule annot_evec:
 
 rule rmd_par:
 	input:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv.tsv"
 	output:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
 	params:
 		date = DATE
 	shell:
@@ -155,9 +162,9 @@ rule rmd_par:
 
 rule write_rmd:
 	input:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}rmd.temp"
 	output:
-		rmd = f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+		rmd = f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
 	params:
 		rmd = "scripts/plot_PCA.Rmd"
 	conda: "envs/rmd.yaml"
@@ -170,13 +177,14 @@ rule write_rmd:
 
 rule rmd_report:
 	input:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
 	output:
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf",
-		f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv_CALLS.tsv"
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf",
+		f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv_CALLS.tsv"
 	conda: "envs/rmd.yaml"
 #	script:
 #		f"{{inv}}_PCA_run/{{inv}}_{DATE}.Rmd"
+# Heredoc to run rmarkdown rendering
 	shell:
 		r"""
 cat <<'EOF' > {rule}.$$.tmp.R
@@ -190,8 +198,8 @@ rm {rule}.$$.tmp.R
 
 rule tar_res:
 	input:
-		rmd = expand(f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
-		tsv = expand(f"{HASH}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv_CALLS.tsv", inv=INVERSIONS)
+		rmd = expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
+		tsv = expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv_CALLS.tsv", inv=INVERSIONS)
 	output:
 		"res_out.tar"
 	shell:
