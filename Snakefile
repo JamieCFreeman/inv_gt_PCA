@@ -52,6 +52,7 @@ EXT = ['geno', 'ind', 'snp']
 rule all:
 	input:
 		"res_out.tar",
+		f"{OUTDIR}/all_calls.tsv",
 		expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}.pdf", inv=INVERSIONS),
 		expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_mat.{{ext}}", inv=INVERSIONS, ext=EXT)
 #		expand(f"{OUTDIR}/{{inv}}_intervals.txt", inv=INVERSIONS)
@@ -195,6 +196,20 @@ EOF
 Rscript {rule}.$$.tmp.R
 rm {rule}.$$.tmp.R
         """
+
+rule merge_res:
+	input:
+		tsv = expand(f"{OUTDIR}/{{inv}}_PCA_run/{{inv}}_{DATE}_inv_CALLS.tsv", inv=INVERSIONS)
+	output:
+		f"{OUTDIR}/all_calls.tsv"
+	shell:
+		# Would be nice to fix this- snakemake provides input as space seperated list, 
+		#  which makes it difficult to provide output to script, write to tmp file,
+		#  then copy over to output file and delete tmp 
+		"""
+		python merge_calls.py {input}
+		cp out.csv {output}; rm out.csv
+		"""
 
 rule tar_res:
 	input:
