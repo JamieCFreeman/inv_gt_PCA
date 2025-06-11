@@ -53,8 +53,10 @@ all_inv = ['1A', '1Be', '2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
 
 ref = "/home/jamie/FAS1K_utils/ref_fas1k/Reference_Chr" + arm + ".fas1k"
 # Files to gt
-uk = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", "/home/jamie/DGN_compatible/FR_N/round2/fas1k", 
-        "/home/jamie/DGN_compatible/ZI_N/round2/fas1k" ]
+uk = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", 
+"/raid10/jamie/FR_N/round2/fas1k", 
+"/home/jamie/DGN_compatible/ZI_N/round2/fas1k" ]
+#uk = ["/raid10/jamie/EF_genomes/round2/fas1k"]
 
 # Known set
 k = [ "/home/jamie/Nexus_diploid_fas1k",
@@ -98,14 +100,15 @@ k_files  = listfullpath(k)
 m = filt_list(k_files, get_fas1k_now, arm)
 m.sort()
 # Get line name from file path
-names = [ f1k.get_name(x) for x in m]
+names = [ f1k.get_name(x, '_') for x in m]
 
 # For known sequences, first alpabetic characters are pop code
 k_sa_codes = [ x + '\t' + 'F' + '\t' +  get_leading_alpha(x) for x in names ]
 
 l = filt_list(uk_files, get_fas1k_now, arm)
 l.sort()
-names = [ f1k.get_name(x) for x in l]
+names = [ f1k.get_name(x, '_') for x in l]
+#names = [ f1k.get_name(x, '_S') for x in l]
 
 # List of all included populations
 pop_list = ['FR', 'ZI', 'EG', 'SD', 'SP', 'EA', 'EF', 'KM', 'NG', 'RG', 
