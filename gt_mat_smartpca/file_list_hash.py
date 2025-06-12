@@ -7,6 +7,8 @@ import os
 import sys
 import subprocess
 
+from gt_matrix import filt_list 
+
 ###############################################################
 
 # Files to gt
@@ -43,15 +45,21 @@ def match_filetype(s,t):
     '''
     return os.path.splitext(s)[1] == t
 
+def f1k_from_dir(d):
+    all_files = listfullpath(d)
+    f1k_files = filt_list(all_files, match_filetype, '.fas1k')
+    return f1k_files
 
-uk_files = listfullpath(uk)
-k_files  = listfullpath(k)
+########################################################################
 
-# Check to see if files in the requested directories have changed
-for_hash = uk_files + k_files
-for_hash.sort()
-with open( 'file_list.txt', 'w') as f:
-   f.write('\n'.join(for_hash) + '\n')
+# If main, Write to file
+if __name__ == '__main__':
+    # Write file list to file so we can check to see if the set 
+    #  of .fas1k files in requested directories have changed
+    for_hash = f1k_from_dir(uk) + f1k_from_dir(k)
+    for_hash.sort()
+    with open( 'file_list.txt', 'w') as f:
+      f.write('\n'.join(for_hash) + '\n')
 
 
 
