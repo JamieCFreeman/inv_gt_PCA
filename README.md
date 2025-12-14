@@ -10,9 +10,9 @@ experiments (because the inverisons are recombination modifiers). This pipeline:
 ### Dependencies:
 I was unable to get smartPCA running from the EIGENSOFT bioconda recipe. I had to download and
 compile from source, with the llapcke library linked in the make command as below.
-> git clone https://github.com/DReichLab/EIG.git
-make LDLIBS="-llapacke"
-make install
+> git clone https://github.com/DReichLab/EIG.git  
+> make LDLIBS="-llapacke"  
+> make install  
 
 I did have to edit the ploteig file to get it to run.
 For the ploteig function, I had to edit the perl shebang line from #!/usr/local/bin/perl to #!/usr/bin/perl, 
