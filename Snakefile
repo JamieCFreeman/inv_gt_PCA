@@ -17,6 +17,12 @@ import gt_mat_smartpca.get_scatter_int as gs
 # Pass through variables from config file
 configfile: "config.yaml"
 
+# Directory locations of sequences are provided in the config file
+unknown_db = ','.join( config["unknown"] )
+known_db   = ','.join( config["known"] )
+print(known_db)
+print(unknown_db)
+
 #######################################################################################
 # Want snakemake to trigger rerun when input files used for PCA change (eg add new known
 # to improve calling or run new unknown data)
@@ -24,7 +30,8 @@ configfile: "config.yaml"
 # the files themselves!
 import gt_mat_smartpca.file_list_hash as fh
 
-HASH = fh.sha_return('file_list.txt')[0:7]
+#HASH = fh.sha_return('file_list.txt')[0:7]
+HASH = '2025-07'
 
 OUTDIR = config["prefix"] + '_' + HASH
 
@@ -63,10 +70,13 @@ rule run_scattered_gt_mat:
 		snp  = temp( f"{OUTDIR}/{{inv}}_mat_{{start}}_{{end}}.snp"),
 		ind  = temp( f"{OUTDIR}/{{inv}}_mat_{{start}}_{{end}}.ind")
 	params: 
-		arm =  lambda wildcards: gs.get_inv_bk(wildcards.inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm']
+		arm =  lambda wildcards: gs.get_inv_bk(wildcards.inv, f = '/home/jamie/FAS1K_utils/inv_bk.tsv')['arm'],
+		unknown_files = unknown_db,
+		known_files   = known_db
 	shell:
 		"""	
-		python run_gt_mat.py {params.arm} {wildcards.start} {wildcards.end} {output.geno}
+		python run_gt_mat.py {params.arm} {wildcards.start} {wildcards.end} \
+		{output.geno} {params.unknown_files} {params.known_files}
 		"""
 
 rule gather_scatter:

@@ -33,6 +33,8 @@ arm      = sys.argv[1]
 p1       = int( sys.argv[2] )
 p2       = int( sys.argv[3] )
 out_now  = sys.argv[4]
+uk       = sys.argv[5].split(',')
+k        = sys.argv[6].split(',')
 
 #out_file = "1A_mat.txt"
 #out_now = out_file.split('.txt')[0] + '_' + str(p1) + '_' + str(p2) + '.geno'
@@ -52,19 +54,6 @@ all_inv = ['1A', '1Be', '2LT', '2RNS', '3LP', '3RK', '3RMO', '3RP']
 ###############################################################
 
 ref = "/home/jamie/FAS1K_utils/ref_fas1k/Reference_Chr" + arm + ".fas1k"
-# Files to gt
-uk = ["/home/jamie/DGN_compatible/stock_validation/round2/fas1k", 
-"/raid10/jamie/FR_N/round2/fas1k", 
-"/home/jamie/DGN_compatible/ZI_N/round2/fas1k" ]
-#uk = ["/raid10/jamie/EF_genomes/round2/fas1k"]
-
-# Known set
-k = [ "/home/jamie/Nexus_diploid_fas1k",
-"/raid10/backups/genepool/DPGP2plus/wrap1kb/ZI_inbred_diploid", 
-"/raid10/backups/genepool/DPGP2plus/wrap1kb/FR_diploid",
-"/home/jamie/dpgp3_sequences", "/home/jamie/dpgp2_sequences", 
-"/raid10/jamie/diploid_fas1k_nomask/CLARK",
-"/home/jamie/dpgp3_sequences/synth_het"]
 
 to_exclude = ["SD136N", "FR11N"]
 
@@ -113,7 +102,7 @@ names = [ f1k.get_name(x, '_') for x in l]
 # List of all included populations
 pop_list = ['FR', 'ZI', 'EG', 'SD', 'SP', 'EA', 'EF', 'KM', 'NG', 'RG', 
         'CK', 'CO', 'ED', 'EZ', 'GA', 'GU', 'KN', 'KO', 'KR', 'KT', 'MW', 'RC', 'TZ', 
-        'UG', 'UM', 'ZK', 'ZL', 'ZO', 'ZS' ]
+        'UG', 'UM', 'ZK', 'ZL', 'ZO', 'ZS', 'TAI' ]
 CLARK_list = ['B', 'I', 'N', 'T', 'ZH', 'ZW']
 
 # New libraries have different naming patterns, provide list of pop codes 

@@ -17,12 +17,6 @@ from fas1k_utils import get_name
 
 ########################################################################
 
-# Using expand statement in Snakemake to gather all files (space seperated), 
-#	where first element in argv is script path, so exclude
-input_files       = sys.argv[1:]
-
-########################################################################
-
 def read_eig(in_file):
 	# Read in .evec file, return as list of lists
 	# Eigenvector file is space separated- read in by lines
@@ -64,7 +58,7 @@ def gather_calls_to_df(input_files):
 	# 1. Get list of dfs with calls from each inv in the set
 	df_l = [ pull_calls_col( eig_to_df( read_eig( x ) ), get_name(x, '_')) for x in input_files ]
 	out  = merge_l_df(df_l)	
-
+	
 	return out
 
 ########################################################################
