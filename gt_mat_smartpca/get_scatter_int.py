@@ -54,8 +54,9 @@ def get_scatter_int(i, s=10000):
 	
 	# Get interval list
 	parts  = coord_from_chunk(inv_dict['break1'] - 50000, inv_dict['break1'] + 50000, chunk_size)
-	parts += coord_from_chunk(inv_dict['break2'] - 50000, inv_dict['break2'] + 50000, chunk_size)
-	
+	if (i != '1Be'):
+		parts += coord_from_chunk(inv_dict['break2'] - 50000, inv_dict['break2'] + 50000, chunk_size)
+
 	return parts
 
 
